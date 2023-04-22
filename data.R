@@ -1,57 +1,67 @@
 # BIBLIOTEKI ===========================================================================================================
-library(purrr)
-library(stringr)
-library(tidyr)
-library(corrplot)
+library(dplyr)    # %>%; select(); transmute(); filter(); glimpse();
+library(purrr)    # set_names(); map_df();
+library(readr)    # read_table();
+library(stringr)  # separate_wider_delim();
+library(tidyr)    # pivot_wider(); drop_na();
+library(corrplot) # corrplot();
+library(ggplot2)
 
-
-# OBLIGACJE SKARBOWE (10-LETNIE) =======================================================================================
-## DANE ================================================================================================================
+# FUNKCJE ==============================================================================================================
 # Read all the files and create a FileName column to store filenames
 # https://stackoverflow.com/questions/3397885/how-do-you-read-multiple-txt-files-into-r
 
-# utworzenie wektora z nazwami sciezek do plikow w zadanym folderze
-list_of_files <-
-  list.files(
-    path = "./data/daily/world/bonds",
-    recursive = TRUE,
-    pattern = "\\.txt$",
-    full.names = TRUE
-  )
-
-df <-
-  list_of_files %>%
-  set_names(.) %>%
-  map_df(read_table, .id = "FileName") %>% 
-  select(!FileName) %>%
-  separate_wider_delim(
-    cols = '<TICKER>,<PER>,<DATE>,<TIME>,<OPEN>,<HIGH>,<LOW>,<CLOSE>,<VOL>,<OPENINT>',
-    delim = ',',
-    names = c(
-      'TICKER',
-      'PER',
-      'DATE',
-      'TIME',
-      'OPEN',
-      'HIGH',
-      'LOW',
-      'CLOSE',
-      'VOL',
-      'OPENINT'
+load_data <- function(path, date) {
+  list_of_files <-
+    list.files(
+      path = path,
+      recursive = TRUE,
+      pattern = "\\.txt$",
+      full.names = TRUE
     )
-  ) %>%
-  transmute(
-    DATE = as.Date(DATE, "%Y%m%d"),
-    TICKER,
-    VALUE = (as.numeric(OPEN) + as.numeric(CLOSE)) / 2
-  ) %>%
-  filter(DATE >= '2018-01-01') %>%
-  pivot_wider(names_from = 'TICKER', values_from = 'VALUE') %>%
-  drop_na()
-df %>% glimpse()
+  
+  df <-
+    list_of_files %>%
+    set_names(.) %>%
+    map_df(read_table, .id = "FileName") %>%
+    select(!FileName) %>%
+    separate_wider_delim(
+      cols = '<TICKER>,<PER>,<DATE>,<TIME>,<OPEN>,<HIGH>,<LOW>,<CLOSE>,<VOL>,<OPENINT>',
+      delim = ',',
+      names = c(
+        'TICKER',
+        'PER',
+        'DATE',
+        'TIME',
+        'OPEN',
+        'HIGH',
+        'LOW',
+        'CLOSE',
+        'VOL',
+        'OPENINT'
+      )
+    ) %>%
+    transmute(
+      DATE = as.Date(DATE, "%Y%m%d"),
+      TICKER,
+      VALUE = (as.numeric(OPEN) + as.numeric(CLOSE)) / 2
+    ) %>%
+    filter(DATE >= date) %>%
+    pivot_wider(names_from = 'TICKER', values_from = 'VALUE') %>%
+    drop_na()
+  
+  return(df)
+}
+
+# DANE =================================================================================================================
+## OBLIGACJE SKARBOWE (10-LETNIE) ======================================================================================
+df_bonds <-
+  load_data(path = "./data/daily/world/bonds",
+            date = "2018-01-01")
+df_bonds %>% glimpse()
 # Rows: 808
 # Columns: 29
-# $ DATE      <date> 2018-01-04, 2018-01-05, 2018-01-09, 2018-01-10, 2018-01-11, …  
+# $ DATE      <date> 2018-01-04, 2018-01-05, 2018-01-09, 2018-01-10, 2018-01-11, …
 # $ `10ATY.B` <dbl> 0.6060, 0.6085, 0.6095, 0.6250, 0.6485, 0.6780, 0.6660, 0.659…  #AUSTRIA
 # $ `10AUY.B` <dbl> 2.6635, 2.6270, 2.6430, 2.7050, 2.7200, 2.7275, 2.7595, 2.750…  #AUSTRALIA
 # $ `10BEY.B` <dbl> 0.66015, 0.65580, 0.66840, 0.69050, 0.70550, 0.73750, 0.70100…  #BELGIUM
@@ -81,26 +91,73 @@ df %>% glimpse()
 # $ `10UKY.B` <dbl> 1.2405, 1.2355, 1.2690, 1.2875, 1.2855, 1.3270, 1.3100, 1.304…  #UNITED KINGDOM
 # $ `10USY.B` <dbl> 2.4589, 2.4690, 2.5238, 2.5605, 2.5440, 2.5515, 2.5390, 2.573…  #USA
 
-plot(x = df$DATE,
-     y = df$`10PLY.B`,
+plot(x = df_bonds$DATE,
+     y = df_bonds$`10PLY.B`,
      type = 'l')
 
-corr_M <- cor(df %>% select(!DATE))
-corrplot(corr_M, method="number")
+corr_M <- cor(df_bonds %>% select(!DATE))
+corrplot(corr_M, method = "number")
 
+## WIODACE WALUTY ======================================================================================================
+df_curr <-
+  load_data(path = "./data/daily/world/currencies/major",
+            date = "2018-01-01")
+df_curr %>% colnames()
+# [1] "DATE"   "AUDCAD" "AUDCHF" "AUDEUR" "AUDGBP" "AUDJPY" "AUDPLN" "AUDUSD"
+# [9] "CADAUD" "CADCHF" "CADEUR" "CADGBP" "CADJPY" "CADPLN" "CADUSD" "CHFAUD"
+# [17] "CHFCAD" "CHFEUR" "CHFGBP" "CHFJPY" "CHFPLN" "CHFUSD" "EURAUD" "EURCAD"
+# [25] "EURCHF" "EURGBP" "EURJPY" "EURPLN" "EURUSD" "GBPAUD" "GBPCAD" "GBPCHF"
+# [33] "GBPEUR" "GBPJPY" "GBPPLN" "GBPUSD" "JPYAUD" "JPYCAD" "JPYCHF" "JPYEUR"
+# [41] "JPYGBP" "JPYPLN" "JPYUSD" "NZDUSD" "USDAUD" "USDCAD" "USDCHF" "USDEUR"
+# [49] "USDGBP" "USDJPY" "USDPLN" "XAGAUD" "XAGCAD" "XAGCHF" "XAGEUR" "XAGGBP"
+# [57] "XAGJPY" "XAGPLN" "XAGUSD" "XAUAUD" "XAUCAD" "XAUCHF" "XAUEUR" "XAUGBP"
+# [65] "XAUJPY" "XAUPLN" "XAUUSD"
 
+# AUD - DOLAR AUSTRALIJSKI
+# CAD - DOLAR KANADYJSKI
+# CHF - FRANK SZWAJCARSKI
+# EUR - EURO
+# GBP - FUNT BRYTYJSKI
+# JPY - JEN
+# PLN - ZLOTOWKA
+# USD - DOLAR AMERYKANSKI
+# NZD - DOLAR NOWOZELANDZKI
+# XAU - ZLOTO
+# XAG - SREBRO
 
+plot(x = df_curr$DATE,
+     y = df_curr$XAUPLN,
+     type = 'l')
 
+plot(x = df_curr$DATE,
+     y = df_curr$XAGPLN,
+     type = 'l')
 
+corr_M <- cor(df_curr %>% select(!DATE))
+corrplot(corr_M, method = "number")
 
+## KRYPTOWALUTY ========================================================================================================
+# https://www.bankrate.com/investing/types-of-cryptocurrency/
+df_crypto <-
+  load_data(path = "./data/daily/world/cryptocurrencies/major",
+            date = "2018-01-01")
+df_crypto %>% colnames()
+# [1] "DATE"   "ADA.V"  "BNB.V"  "BTC.V"  "DOGE.V" "ETH.V"  "USDT.V" "XRP.V"
+#ADA.V - Cardano
+#BNB.V - BNB
+#BTC.V - Bitcoin
+#DOGE.V - Dogecoin
+#ETH.V - Ethereum
+#USDT.V - Tether
+#XRP.V - XRP
 
+plot(x = df_crypto$DATE,
+     y = df_crypto$BTC.V,
+     type = 'l')
 
+plot(x = df_crypto$DATE,
+     y = df_crypto$ETH.V,
+     type = 'l')
 
-
-
-
-
-
-
-
-
+corr_M <- cor(df_curr %>% select(!DATE))
+corrplot(corr_M, method = "number")
