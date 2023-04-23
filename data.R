@@ -1,8 +1,7 @@
 # BIBLIOTEKI ===========================================================================================================
 library(dplyr)    # %>%; select(); transmute(); filter(); glimpse();
 library(purrr)    # set_names(); map_df();
-library(readr)    # read_table();
-library(stringr)  # separate_wider_delim();
+library(readr)    # read_table(); separate_wider_delim();
 library(tidyr)    # pivot_wider(); drop_na();
 library(corrplot) # corrplot();
 library(ggplot2)
@@ -56,7 +55,7 @@ load_data <- function(path, date) {
 # DANE =================================================================================================================
 ## OBLIGACJE SKARBOWE (10-LETNIE) ======================================================================================
 df_bonds <-
-  load_data(path = "./data/daily/world/bonds",
+  load_data(path = "./data/stooq/world/bonds",
             date = "2018-01-01")
 df_bonds %>% glimpse()
 # Rows: 808
@@ -100,7 +99,7 @@ corrplot(corr_M, method = "number")
 
 ## WIODACE WALUTY ======================================================================================================
 df_curr <-
-  load_data(path = "./data/daily/world/currencies/major",
+  load_data(path = "./data/stooq/world/currencies/major",
             date = "2018-01-01")
 df_curr %>% colnames()
 # [1] "DATE"   "AUDCAD" "AUDCHF" "AUDEUR" "AUDGBP" "AUDJPY" "AUDPLN" "AUDUSD"
@@ -133,13 +132,10 @@ plot(x = df_curr$DATE,
      y = df_curr$XAGPLN,
      type = 'l')
 
-corr_M <- cor(df_curr %>% select(!DATE))
-corrplot(corr_M, method = "number")
-
 ## KRYPTOWALUTY ========================================================================================================
 # https://www.bankrate.com/investing/types-of-cryptocurrency/
 df_crypto <-
-  load_data(path = "./data/daily/world/cryptocurrencies/major",
+  load_data(path = "./data/stooq/world/cryptocurrencies/major",
             date = "2018-01-01")
 df_crypto %>% colnames()
 # [1] "DATE"   "ADA.V"  "BNB.V"  "BTC.V"  "DOGE.V" "ETH.V"  "USDT.V" "XRP.V"
@@ -159,5 +155,84 @@ plot(x = df_crypto$DATE,
      y = df_crypto$ETH.V,
      type = 'l')
 
-corr_M <- cor(df_curr %>% select(!DATE))
+corr_M <- cor(df_crypto %>% select(!DATE))
 corrplot(corr_M, method = "number")
+
+## INDEKSY =============================================================================================================
+df_indices <-
+  load_data(path = "./data/stooq/world/indices",
+            date = "2018-01-01")
+df_indices %>% colnames()
+# [1] "DATE"   "^AEX"   "^AOR"   "^ATH"   "^BEL20" "^BET"   "^BUX"   "^BVP"   "^CAC"   "^CDAX" 
+# [11] "^CRY"   "^DAX"   "^DJC"   "^DJI"   "^DJT"   "^DJU"   "^FMIB"  "^FTM"   "^HEX"   "^HSI"  
+# [21] "^IBEX"  "^ICEX"  "^IPC"   "^IPSA"  "^JCI"   "^KLCI"  "^KOSPI" "^MDAX"  "^MOEX"  "^MRV"  
+# [31] "^MT30"  "^NDQ"   "^NDX"   "^NKX"   "^NOMUC" "^NZ50"  "^OMXR"  "^OMXS"  "^OMXT"  "^OMXV" 
+# [41] "^OSEAX" "^PSEI"  "^PSI20" "^PX"    "^RTS"   "^SAX"   "^SDXP"  "^SET"   "^SHBS"  "^SHC"  
+# [51] "^SMI"   "^SNX"   "^SOFIX" "^SPX"   "^STI"   "^TASI"  "^TDXP"  "^TSX"   "^TWSE"  "^UKX"  
+# [61] "^UX"    "^XU100"
+
+plot(x = df_indices$DATE,
+     y = df_indices$`^UKX`,
+     type = 'l')
+
+## INDEKSY (main stooq.pl) =============================================================================================
+# Stooq [...] All Stocks Price Index
+df_indices_stooq <-
+  load_data(path = "./data/stooq/world/stooq stocks indices",
+            date = "2018-01-01") %>% 
+  select(!c("^_PL20", "^_PLNC", "^_PLWS"))
+df_indices_stooq %>% colnames()
+# [1] "DATE"   "^_DE"   "^_HK"   "^_HU"   "^_JP"   "^_PL"   "^_UK"   "^_US"  
+# [9] "^_USNM" "^_USNQ" "^_USNS"
+# ^_DE - Germany
+# ^_HK- ?
+# ^_HU - Hungary
+# ^_JP - Japan
+# ^_PL - Poland
+# ^_UK - United Kingdom
+# ^_US - United States
+# ^_USNM - ?
+# ^_USNQ - US Nasdaq (Nasdaq Stock Market)
+# ^_USNS - US NYSE (The New York Stock Exchange)
+
+plot(x = df_indices_stooq$DATE,
+     y = df_indices_stooq$`^_UK`,
+     type = 'l')
+
+## STOPY PROCENTOWE ====================================================================================================
+# https://stats.oecd.org
+df_intrate <-
+  read.csv(file = "data/oecd/interest rate/MEI_FIN_23042023220434720.csv") %>%
+  filter(Subject == "Long-term interest rates, Per cent per annum") %>%
+  transmute(Country,
+            Date = as.Date(paste0(TIME, "-01")),
+            Value = round(Value / 100, 4)) %>%
+  pivot_wider(names_from = 'Country', values_from = 'Value')
+
+plot(x = df_intrate$Date,
+     y = df_intrate$Poland,
+     type = 'l')
+
+## INFLACJA ============================================================================================================
+# https://stats.oecd.org
+df_inflation <-
+  read.csv(file = "data/oecd/inflation/KEI_23042023223303307.csv") %>%
+  transmute(Country,
+            Measure,
+            Date = as.Date(paste0(TIME, "-01")),
+            Value = round(Value / 100, 4)) %>%
+  pivot_wider(names_from = 'Country', values_from = 'Value')
+
+df_inflation_MAM <-
+  df_inflation %>%
+  filter(Measure == "Growth previous period") %>% 
+  select(!Measure)
+
+df_inflation_YOY <-
+  df_inflation %>%
+  filter(Measure == "Growth on the same period of the previous year") %>% 
+  select(!Measure)
+
+plot(x = df_inflation_YOY$Date,
+     y = df_inflation_YOY$Poland,
+     type = 'l')
