@@ -2,6 +2,7 @@
 library(dplyr)    # %>%; select(); transmute(); filter(); glimpse();
 library(purrr)    # set_names(); map_df();
 library(readr)    # read_table(); separate_wider_delim();
+library(openxlsx)     # write.xlsx();
 library(tidyr)    # pivot_wider(); drop_na();
 library(corrplot) # corrplot();
 library(ggplot2)
@@ -97,6 +98,13 @@ plot(x = df_bonds$DATE,
 corr_M <- cor(df_bonds %>% select(!DATE))
 corrplot(corr_M, method = "number")
 
+write.xlsx(
+  x = df_bonds,
+  file = "./data/prepared/df_bonds.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## WIODACE WALUTY ======================================================================================================
 df_curr <-
   load_data(path = "./data/stooq/world/currencies/major",
@@ -132,6 +140,13 @@ plot(x = df_curr$DATE,
      y = df_curr$XAGPLN,
      type = 'l')
 
+write.xlsx(
+  x = df_curr,
+  file = "./data/prepared/df_curr.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## KRYPTOWALUTY ========================================================================================================
 # https://www.bankrate.com/investing/types-of-cryptocurrency/
 df_crypto <-
@@ -158,31 +173,45 @@ plot(x = df_crypto$DATE,
 corr_M <- cor(df_crypto %>% select(!DATE))
 corrplot(corr_M, method = "number")
 
+write.xlsx(
+  x = df_crypto,
+  file = "./data/prepared/df_crypto.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## INDEKSY =============================================================================================================
 df_indices <-
   load_data(path = "./data/stooq/world/indices",
             date = "2018-01-01")
 df_indices %>% colnames()
-# [1] "DATE"   "^AEX"   "^AOR"   "^ATH"   "^BEL20" "^BET"   "^BUX"   "^BVP"   "^CAC"   "^CDAX" 
-# [11] "^CRY"   "^DAX"   "^DJC"   "^DJI"   "^DJT"   "^DJU"   "^FMIB"  "^FTM"   "^HEX"   "^HSI"  
-# [21] "^IBEX"  "^ICEX"  "^IPC"   "^IPSA"  "^JCI"   "^KLCI"  "^KOSPI" "^MDAX"  "^MOEX"  "^MRV"  
-# [31] "^MT30"  "^NDQ"   "^NDX"   "^NKX"   "^NOMUC" "^NZ50"  "^OMXR"  "^OMXS"  "^OMXT"  "^OMXV" 
-# [41] "^OSEAX" "^PSEI"  "^PSI20" "^PX"    "^RTS"   "^SAX"   "^SDXP"  "^SET"   "^SHBS"  "^SHC"  
-# [51] "^SMI"   "^SNX"   "^SOFIX" "^SPX"   "^STI"   "^TASI"  "^TDXP"  "^TSX"   "^TWSE"  "^UKX"  
+# [1] "DATE"   "^AEX"   "^AOR"   "^ATH"   "^BEL20" "^BET"   "^BUX"   "^BVP"   "^CAC"   "^CDAX"
+# [11] "^CRY"   "^DAX"   "^DJC"   "^DJI"   "^DJT"   "^DJU"   "^FMIB"  "^FTM"   "^HEX"   "^HSI"
+# [21] "^IBEX"  "^ICEX"  "^IPC"   "^IPSA"  "^JCI"   "^KLCI"  "^KOSPI" "^MDAX"  "^MOEX"  "^MRV"
+# [31] "^MT30"  "^NDQ"   "^NDX"   "^NKX"   "^NOMUC" "^NZ50"  "^OMXR"  "^OMXS"  "^OMXT"  "^OMXV"
+# [41] "^OSEAX" "^PSEI"  "^PSI20" "^PX"    "^RTS"   "^SAX"   "^SDXP"  "^SET"   "^SHBS"  "^SHC"
+# [51] "^SMI"   "^SNX"   "^SOFIX" "^SPX"   "^STI"   "^TASI"  "^TDXP"  "^TSX"   "^TWSE"  "^UKX"
 # [61] "^UX"    "^XU100"
 
 plot(x = df_indices$DATE,
      y = df_indices$`^UKX`,
      type = 'l')
 
+write.xlsx(
+  x = df_indices,
+  file = "./data/prepared/df_indices.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## INDEKSY (main stooq.pl) =============================================================================================
 # Stooq [...] All Stocks Price Index
 df_indices_stooq <-
   load_data(path = "./data/stooq/world/stooq stocks indices",
-            date = "2018-01-01") %>% 
+            date = "2018-01-01") %>%
   select(!c("^_PL20", "^_PLNC", "^_PLWS"))
 df_indices_stooq %>% colnames()
-# [1] "DATE"   "^_DE"   "^_HK"   "^_HU"   "^_JP"   "^_PL"   "^_UK"   "^_US"  
+# [1] "DATE"   "^_DE"   "^_HK"   "^_HU"   "^_JP"   "^_PL"   "^_UK"   "^_US"
 # [9] "^_USNM" "^_USNQ" "^_USNS"
 # ^_DE - Germany
 # ^_HK- ?
@@ -199,6 +228,16 @@ plot(x = df_indices_stooq$DATE,
      y = df_indices_stooq$`^_UK`,
      type = 'l')
 
+corr_M <- cor(df_indices_stooq %>% select(!DATE))
+corrplot(corr_M, method = "number")
+
+write.xlsx(
+  x = df_indices_stooq,
+  file = "./data/prepared/df_indices_stooq.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## STOPY PROCENTOWE ====================================================================================================
 # https://stats.oecd.org
 df_intrate <-
@@ -213,6 +252,13 @@ plot(x = df_intrate$Date,
      y = df_intrate$Poland,
      type = 'l')
 
+write.xlsx(
+  x = df_intrate,
+  file = "./data/prepared/df_intrate.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## INFLACJA ============================================================================================================
 # https://stats.oecd.org
 df_inflation <-
@@ -225,14 +271,21 @@ df_inflation <-
 
 df_inflation_MAM <-
   df_inflation %>%
-  filter(Measure == "Growth previous period") %>% 
+  filter(Measure == "Growth previous period") %>%
   select(!Measure)
 
 df_inflation_YOY <-
   df_inflation %>%
-  filter(Measure == "Growth on the same period of the previous year") %>% 
+  filter(Measure == "Growth on the same period of the previous year") %>%
   select(!Measure)
 
 plot(x = df_inflation_YOY$Date,
      y = df_inflation_YOY$Poland,
      type = 'l')
+
+write.xlsx(
+  x = df_inflation,
+  file = "./data/prepared/df_inflation.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
