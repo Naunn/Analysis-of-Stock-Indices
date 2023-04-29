@@ -267,6 +267,22 @@ write.xlsx(
   rowNames = FALSE
 )
 
+## WYBRANE INDEKSY =====================================================================================================
+df_indices_custom <-
+  load_csv_data(path = "./data/stooq/world/custom",
+                date = "2018-01-01")
+
+plot(x = df_indices_custom$DATE,
+     y = df_indices_custom$wig_nrchom,
+     type = 'l')
+
+write.xlsx(
+  x = df_indices_custom,
+  file = "./data/prepared/df_indices_custom.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
+
 ## STOPY PROCENTOWE ====================================================================================================
 # https://stats.oecd.org
 df_intrate <-
@@ -302,7 +318,7 @@ df_inflation_MAM <-
   df_inflation %>%
   filter(Measure == "Growth previous period") %>%
   select(!Measure) %>%
-  mutate_at(c(2:ncol(df_inflation_MAM)), cumsum)
+  mutate_at(c(3:ncol(df_inflation) - 1), cumsum)
 
 plot(x = df_inflation_MAM$Date,
      y = df_inflation_MAM$Poland,
@@ -327,22 +343,6 @@ write.xlsx(
 write.xlsx(
   x = df_inflation_YOY,
   file = "./data/prepared/df_inflation_YOY.xlsx",
-  overwrite = TRUE,
-  rowNames = FALSE
-)
-
-## WYBRANE INDEKSY =====================================================================================================
-df_indices_custom <-
-  load_csv_data(path = "./data/stooq/world/custom",
-                date = "2018-01-01")
-
-plot(x = df_indices_custom$DATE,
-     y = df_indices_custom$wig_nrchom,
-     type = 'l')
-
-write.xlsx(
-  x = df_indices_custom,
-  file = "./data/prepared/df_indices_custom.xlsx",
   overwrite = TRUE,
   rowNames = FALSE
 )
