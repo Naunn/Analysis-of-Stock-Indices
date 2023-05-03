@@ -49,7 +49,8 @@ load_txt_data <- function(path, date) {
     ) %>%
     filter(DATE >= date) %>%
     pivot_wider(names_from = 'TICKER', values_from = 'VALUE') %>%
-    drop_na()
+    drop_na() %>%
+    as.data.frame()
   
   return(df)
 }
@@ -77,7 +78,8 @@ load_csv_data <-
       ) %>%
       filter(DATE >= date) %>%
       pivot_wider(names_from = 'TICKER', values_from = 'VALUE') %>%
-      drop_na()
+      drop_na() %>%
+      as.data.frame()
     
     return(df)
   }
@@ -272,6 +274,9 @@ df_indices_custom <-
   load_csv_data(path = "./data/stooq/world/custom",
                 date = "2018-01-01")
 
+df_indices_custom %>% colnames()
+# [1] "DATE"       "wig_budow"  "wig"        "wig_nrchom" "wig20"
+
 plot(x = df_indices_custom$DATE,
      y = df_indices_custom$wig_nrchom,
      type = 'l')
@@ -291,9 +296,36 @@ df_intrate <-
   transmute(Country,
             Date = as.Date(paste0(TIME, "-01")),
             Value = round(Value / 100, 4)) %>%
-  pivot_wider(names_from = 'Country', values_from = 'Value')
+  pivot_wider(names_from = 'Country', values_from = 'Value') %>%
+  rename(DATE = Date)
 
-plot(x = df_intrate$Date,
+df_intrate %>% colnames()
+# [1] "DATE"                         "Australia"
+# [3] "Austria"                      "Belgium"
+# [5] "Canada"                       "Czech Republic"
+# [7] "Denmark"                      "Finland"
+# [9] "France"                       "Germany"
+# [11] "Greece"                       "Hungary"
+# [13] "Iceland"                      "Ireland"
+# [15] "Italy"                        "Japan"
+# [17] "Korea"                        "Luxembourg"
+# [19] "Mexico"                       "Netherlands"
+# [21] "New Zealand"                  "Norway"
+# [23] "Poland"                       "Portugal"
+# [25] "Slovak Republic"              "Spain"
+# [27] "Sweden"                       "Switzerland"
+# [29] "United Kingdom"               "United States"
+# [31] "Chile"                        "Israel"
+# [33] "Russia"                       "Slovenia"
+# [35] "South Africa"                 "Latvia"
+# [37] "Euro area (19 countries)"     "Colombia"
+# [39] "Lithuania"                    "Costa Rica"
+# [41] "India"                        "Estonia"
+# [43] "Indonesia"                    "Brazil"
+# [45] "China (People's Republic of)" "Bulgaria"
+# [47] "Croatia"                      "Romania"
+
+plot(x = df_intrate$DATE,
      y = df_intrate$Poland,
      type = 'p')
 
@@ -312,16 +344,41 @@ df_inflation <-
             Measure,
             Date = as.Date(paste0(TIME, "-01")),
             Value = round(Value / 100, 4)) %>%
-  pivot_wider(names_from = 'Country', values_from = 'Value')
+  pivot_wider(names_from = 'Country', values_from = 'Value') %>%
+  rename(DATE = Date)
 
-df_inflation_MAM <-
+df_inflation_ACC <-
   df_inflation %>%
   filter(Measure == "Growth previous period") %>%
   select(!Measure) %>%
   mutate_at(c(3:ncol(df_inflation) - 1), cumsum)
 
-plot(x = df_inflation_MAM$Date,
-     y = df_inflation_MAM$Poland,
+df_inflation_ACC %>% colnames()
+# [1] "DATE"                         "Austria"
+# [3] "Belgium"                      "Canada"
+# [5] "Czech Republic"               "Denmark"
+# [7] "Finland"                      "France"
+# [9] "Germany"                      "Greece"
+# [11] "Hungary"                      "Iceland"
+# [13] "Ireland"                      "Italy"
+# [15] "Japan"                        "Korea"
+# [17] "Luxembourg"                   "Mexico"
+# [19] "Netherlands"                  "Norway"
+# [21] "Poland"                       "Portugal"
+# [23] "Slovak Republic"              "Spain"
+# [25] "Sweden"                       "Switzerland"
+# [27] "Türkiye"                      "United Kingdom"
+# [29] "United States"                "Argentina"
+# [31] "Brazil"                       "Chile"
+# [33] "China (People's Republic of)" "Estonia"
+# [35] "India"                        "Indonesia"
+# [37] "Israel"                       "Russia"
+# [39] "Saudi Arabia"                 "Slovenia"
+# [41] "South Africa"                 "Colombia"
+# [43] "Costa Rica"
+
+plot(x = df_inflation_ACC$DATE,
+     y = df_inflation_ACC$Poland,
      type = 'l')
 
 df_inflation_YOY <-
@@ -329,13 +386,37 @@ df_inflation_YOY <-
   filter(Measure == "Growth on the same period of the previous year") %>%
   select(!Measure)
 
-plot(x = df_inflation_YOY$Date,
+df_inflation_YOY %>% colnames()
+# [1] "DATE"                         "Austria"
+# [3] "Belgium"                      "Canada"
+# [5] "Czech Republic"               "Denmark"
+# [7] "Finland"                      "France"
+# [9] "Germany"                      "Greece"
+# [11] "Hungary"                      "Iceland"
+# [13] "Ireland"                      "Italy"
+# [15] "Japan"                        "Korea"
+# [17] "Luxembourg"                   "Mexico"
+# [19] "Netherlands"                  "Norway"
+# [21] "Poland"                       "Portugal"
+# [23] "Slovak Republic"              "Spain"
+# [25] "Sweden"                       "Switzerland"
+# [27] "Türkiye"                      "United Kingdom"
+# [29] "United States"                "Argentina"
+# [31] "Brazil"                       "Chile"
+# [33] "China (People's Republic of)" "Estonia"
+# [35] "India"                        "Indonesia"
+# [37] "Israel"                       "Russia"
+# [39] "Saudi Arabia"                 "Slovenia"
+# [41] "South Africa"                 "Colombia"
+# [43] "Costa Rica"
+
+plot(x = df_inflation_YOY$DATE,
      y = df_inflation_YOY$Poland,
      type = 'l')
 
 write.xlsx(
-  x = df_inflation_MAM,
-  file = "./data/prepared/df_inflation_MAM.xlsx",
+  x = df_inflation_ACC,
+  file = "./data/prepared/df_inflation_ACC.xlsx",
   overwrite = TRUE,
   rowNames = FALSE
 )
@@ -346,3 +427,49 @@ write.xlsx(
   overwrite = TRUE,
   rowNames = FALSE
 )
+
+# ## JOIN ALL ============================================================================================================
+# # ChatGPT
+# # put data frames in a list
+# df_list <-
+#   list(
+#     df_bonds,
+#     df_curr,
+#     df_crypto,
+#     df_indices,
+#     df_indices_stooq,
+#     df_indices_custom,
+#     df_intrate,
+#     df_inflation_ACC,
+#     df_inflation_YOY
+#   )
+# df_suffixes <-
+#   c(
+#     "_bonds",
+#     "_curr",
+#     "_crypto",
+#     "_indices",
+#     "_indices_stooq",
+#     "_indices_custom",
+#     "_intrate",
+#     "_inflation_ACC",
+#     "_inflation_YOY"
+#   )
+# 
+# # loop over list and join data frames with suffixes
+# df_all <- df_list[[1]]
+# colnames(df_all)[-1] <- paste0(colnames(df_all)[-1], df_suffixes[1])
+# for (i in 2:length(df_list)) {
+#   colnames(df_list[[i]])[-1] <-
+#     paste0(colnames(df_list[[i]])[-1], df_suffixes[i])
+#   suffixes <- c(df_suffixes[i - 1], df_suffixes[i])
+#   df_all <- df_all %>%
+#     full_join(df_list[[i]], by = "DATE", suffix = suffixes)
+# }
+# 
+# write.xlsx(
+#   x = df_all,
+#   file = "./data/prepared/df_all.xlsx",
+#   overwrite = TRUE,
+#   rowNames = FALSE
+# )
