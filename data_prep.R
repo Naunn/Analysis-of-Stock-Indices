@@ -429,47 +429,58 @@ write.xlsx(
 )
 
 # ## JOIN ALL ============================================================================================================
-# # ChatGPT
-# # put data frames in a list
-# df_list <-
-#   list(
-#     df_bonds,
-#     df_curr,
-#     df_crypto,
-#     df_indices,
-#     df_indices_stooq,
-#     df_indices_custom,
-#     df_intrate,
-#     df_inflation_ACC,
-#     df_inflation_YOY
-#   )
-# df_suffixes <-
-#   c(
-#     "_bonds",
-#     "_curr",
-#     "_crypto",
-#     "_indices",
-#     "_indices_stooq",
-#     "_indices_custom",
-#     "_intrate",
-#     "_inflation_ACC",
-#     "_inflation_YOY"
-#   )
-# 
-# # loop over list and join data frames with suffixes
-# df_all <- df_list[[1]]
-# colnames(df_all)[-1] <- paste0(colnames(df_all)[-1], df_suffixes[1])
-# for (i in 2:length(df_list)) {
-#   colnames(df_list[[i]])[-1] <-
-#     paste0(colnames(df_list[[i]])[-1], df_suffixes[i])
-#   suffixes <- c(df_suffixes[i - 1], df_suffixes[i])
-#   df_all <- df_all %>%
-#     full_join(df_list[[i]], by = "DATE", suffix = suffixes)
-# }
-# 
-# write.xlsx(
-#   x = df_all,
-#   file = "./data/prepared/df_all.xlsx",
-#   overwrite = TRUE,
-#   rowNames = FALSE
-# )
+# ChatGPT
+# put data frames in a list
+df_list <-
+  list(
+    df_bonds,
+    df_curr,
+    df_crypto,
+    df_indices,
+    df_indices_stooq,
+    df_indices_custom,
+    df_intrate,
+    df_inflation_ACC,
+    df_inflation_YOY
+  )
+df_suffixes <-
+  c(
+    "_bonds",
+    "_curr",
+    "_crypto",
+    "_indices",
+    "_indices_stooq",
+    "_indices_custom",
+    "_intrate",
+    "_inflation_ACC",
+    "_inflation_YOY"
+  )
+
+# os daty
+df_all <-
+  seq(as.Date("2018-01-01"), as.Date("2023-05-01"), "days") %>%
+  as.data.frame()
+colnames(df_all) <- "DATE"
+
+# pierwsze zlaczenie
+colnames(df_list[[1]])[-1] <-
+  paste0(colnames(df_list[[1]])[-1], df_suffixes[1])
+df_all %>%
+  left_join(df_list[[1]], by = "DATE")
+
+# loop over list and join data frames with suffixes
+for (i in 2:length(df_list)) {
+  colnames(df_list[[i]])[-1] <-
+    paste0(colnames(df_list[[i]])[-1], df_suffixes[i])
+  suffixes <- c(df_suffixes[i - 1], df_suffixes[i])
+  df_all <- df_all %>%
+    left_join(df_list[[i]], by = "DATE", suffix = suffixes)
+}
+
+# zapis do pliku
+write.xlsx(
+  x = df_all,
+  file = "./data/prepared/df_all.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
