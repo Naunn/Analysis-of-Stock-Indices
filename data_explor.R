@@ -4,7 +4,6 @@ library(tidyr)
 library(readxl)
 library(plotly)
 
-
 # DANE =================================================================================================================
 df_all <- read_excel("data/prepared/df_all.xlsx") %>%
   mutate(DATE = as.Date(DATE)) %>%
@@ -82,7 +81,7 @@ plot_ly(
     inherit = FALSE,
     showlegend = TRUE,
     name = "FTX bankruptcy"
-  ) %>% # wskazniklapse of Silicon Valley Bank
+  ) %>% # Colapse of Silicon Valley Bank
   add_lines(
     y = range(df_all_norm_smooth[[wskaznik]], na.rm = TRUE),
     x = "2023-03-10",
