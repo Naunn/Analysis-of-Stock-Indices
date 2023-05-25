@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyr)
 library(readxl)
+library(openxlsx)
 library(ggplot2)
 
 df_all_slim <-
@@ -123,3 +124,10 @@ ggplot(df_all_slim_norm, aes(x = DATE)) +
   geom_line(aes(y = `^WIG20`), color = "blue") +
   geom_line(aes(y = inflation_Poland), color = "dark green")
 
+# zapis do pliku
+write.xlsx(
+  x = df_all_slim_norm,
+  file = "./data/prepared/df_all_slim_norm.xlsx",
+  overwrite = TRUE,
+  rowNames = FALSE
+)
