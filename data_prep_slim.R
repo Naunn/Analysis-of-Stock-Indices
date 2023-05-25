@@ -12,7 +12,20 @@ stopy_procentowe <-
   pivot_wider(names_from = 'Country',
               values_from = 'Value',
               names_prefix = 'intrate_') %>%
-  rename(DATE = Date)
+  rename(DATE = Date) %>%
+  select(
+    DATE,
+    intrate_Poland,
+    intrate_Germany,
+    intrate_France,
+    `intrate_United Kingdom`,
+    `intrate_United States`,
+    intrate_Finland,
+    # intrate_Ukraine, # brak danych
+    intrate_Russia
+  )
+# intrate_Türkiye, # brak danych
+# intrate_China) # brak danych
 
 # inflacja rok do roku (https://stats.oecd.org)
 inflacja <-
@@ -26,7 +39,20 @@ inflacja <-
               names_prefix = 'inflation_') %>%
   rename(DATE = Date) %>%
   filter(Measure == "Growth on the same period of the previous year") %>%
-  select(!Measure)
+  select(
+    DATE,
+    inflation_Poland,
+    inflation_Germany,
+    inflation_France,
+    `inflation_United Kingdom`,
+    `inflation_United States`,
+    inflation_Finland,
+    # inflation_Ukraine, # brak danych
+    inflation_Russia,
+    inflation_Türkiye
+    # brak danych
+    # inflation_China
+  ) # brak danych
 
 # polska gielda https://stooq.pl/q/?s=wig&c=5y&t=l&a=ln&b=0
 polska <-
@@ -200,7 +226,7 @@ ethernum <-
 # zlaczenie tabel - poniewaz brak notowan na sylwestra, zatem musimy zaczac od kryptowalut
 df_all <-
   bitcoin %>%
-  left_join(ethernum, by = "DATE") %>% 
+  left_join(ethernum, by = "DATE") %>%
   left_join(polska, by = "DATE") %>%
   left_join(polska20, by = "DATE") %>%
   left_join(niemcy, by = "DATE") %>%
@@ -212,7 +238,7 @@ df_all <-
   left_join(rosja, by = "DATE") %>%
   left_join(turcja, by = "DATE") %>%
   left_join(chiny, by = "DATE") %>%
-  left_join(stopy_procentowe, by = "DATE") %>% 
+  left_join(stopy_procentowe, by = "DATE") %>%
   left_join(inflacja, by = "DATE") %>%
   # poniewaz stopy procentowe i inflacja sa miesiac po miesiacu, zatem musimy uzupelnic cale miesiace "w dol"
   fill(everything(), .direction = c("down"))
@@ -224,4 +250,3 @@ write.xlsx(
   overwrite = TRUE,
   rowNames = FALSE
 )
-
