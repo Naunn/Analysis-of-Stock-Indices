@@ -197,14 +197,10 @@ ethernum <-
   drop_na() %>%
   as.data.frame()
 
-# zlaczenie tabel - poniewaz brak notowan na sylwestra, zatem musimy utworzyc sztuczny ciag dat
-DATE <-
-  seq.Date(from = as.Date("2018-01-01"), to = as.Date("2023-05-25"), by = "day") %>% 
-  as.data.frame()
-colnames(DATE) <- "DATE"
-
+# zlaczenie tabel - poniewaz brak notowan na sylwestra, zatem musimy zaczac od kryptowalut
 df_all <-
-  DATE %>% 
+  bitcoin %>%
+  left_join(ethernum, by = "DATE") %>% 
   left_join(polska, by = "DATE") %>%
   left_join(polska20, by = "DATE") %>%
   left_join(niemcy, by = "DATE") %>%
@@ -216,8 +212,6 @@ df_all <-
   left_join(rosja, by = "DATE") %>%
   left_join(turcja, by = "DATE") %>%
   left_join(chiny, by = "DATE") %>%
-  left_join(bitcoin, by = "DATE") %>%
-  left_join(ethernum, by = "DATE") %>% 
   left_join(stopy_procentowe, by = "DATE") %>% 
   left_join(inflacja, by = "DATE") %>%
   # poniewaz stopy procentowe i inflacja sa miesiac po miesiacu, zatem musimy uzupelnic cale miesiace "w dol"
