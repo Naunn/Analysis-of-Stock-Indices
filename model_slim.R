@@ -1,6 +1,7 @@
 library(dplyr)
 library(tidyr)
 library(readxl)
+library(forecast)
 library(Quandl) # https://financetrain.com/financial-time-series-data
 
 df_all_slim_real <-
@@ -84,8 +85,8 @@ legend(
   text.width = 0.7
 )
 
-# porownanie srednich wykorzystujac model sredniej ruchomej
-# (powinno to zniwelowac efekt szumu, w porownaniu do mierzenia zwyklych srednich)
+# porownanie srednich wykorzystujac model arima (automat)
+# (powinno to zniwelowac efekt szumu, w porownaniu do mierzenia zwyklych srednich z wartosci)
 
 # podzielimy na 3 okresy: przed pandemia; po panedmii, a przed agresja rosji; po agresji rosji
 covid <-
@@ -97,23 +98,25 @@ post_aggression <-
   window(df_ts, start = rus_aggression, end = end(df_ts))
 
 # utworzenie modeli
-pre_covid_ma <- arima(pre_covid$`^OMXT_real`, order = c(0, 0, 1))
-post_covid_ma <- arima(post_covid$`^OMXT_real`, order = c(0, 0, 1))
-post_aggression_ma <-
-  arima(post_aggression$`^OMXT_real`, order = c(0, 0, 1))
+pre_covid_model <- auto.arima(pre_covid$`^OMXT_real`)
+checkresiduals(pre_covid_model) # stacjonarny
+post_covid_model <- auto.arima(post_covid$`^OMXT_real`)
+checkresiduals(post_covid_model) # stacjonarny
+post_aggression_model <- auto.arima(post_aggression$`^OMXT_real`)
+checkresiduals(post_aggression_model) # stacjonarny
 
 # wizualne porownanie modeli
 plot(df_ts$`^OMXT_real`)
-lines(fitted(pre_covid_ma), col = 'green')
-lines(fitted(post_covid_ma), col = 'blue')
-lines(fitted(post_aggression_ma), col = 'red')
+lines(fitted(pre_covid_model), col = 'green')
+lines(fitted(post_covid_model), col = 'blue')
+lines(fitted(post_aggression_model), col = 'red')
 
 # porownanie srednich
-pre_covid_mean <- fitted(pre_covid_ma) %>% mean()
+pre_covid_mean <- fitted(pre_covid_model) %>% mean()
 pre_covid_mean
-post_covid_mean <- fitted(post_covid_ma) %>% mean()
+post_covid_mean <- fitted(post_covid_model) %>% mean()
 post_covid_mean
-post_aggression_mean <- fitted(post_aggression_ma) %>% mean()
+post_aggression_mean <- fitted(post_aggression_model) %>% mean()
 post_aggression_mean
 
 # wizualne porownanie srednich z modeli (chatGPT)
@@ -126,7 +129,3 @@ plot(df_ts$`^OMXT_real`)
 lines(pre_covid_mean_ts, col = 'green')
 lines(post_covid_mean_ts, col = 'blue')
 lines(post_aggression_mean_ts, col = 'red')
-
-# predykcja z autodopasowania
-fit <- df_ts$`^OMXT_real` %>% forecast::auto.arima()
-plot(forecast::forecast(fit, h = 21))
