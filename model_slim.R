@@ -129,3 +129,8 @@ plot(df_ts$`^OMXT_real`)
 lines(pre_covid_mean_ts, col = 'green')
 lines(post_covid_mean_ts, col = 'blue')
 lines(post_aggression_mean_ts, col = 'red')
+
+# predykcja calosci
+fit <- auto.arima(df_ts$`^OMXT_real`)
+checkresiduals(fit)
+plot(forecast(fit, h = 21))
