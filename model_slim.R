@@ -1,4 +1,5 @@
 library(dplyr)
+library(tidyr)
 library(readxl)
 library(Quandl) # https://financetrain.com/financial-time-series-data
 
@@ -96,21 +97,24 @@ post_aggression <-
   window(df_ts, start = rus_aggression, end = end(df_ts))
 
 # utworzenie modeli
-pre_covid_ma <- arima(pre_covid$`^WIG_real`, order = c(0, 0, 1))
-post_covid_ma <- arima(post_covid$`^WIG_real`, order = c(0, 0, 1))
+pre_covid_ma <- arima(pre_covid$`^OMXT_real`, order = c(0, 0, 1))
+post_covid_ma <- arima(post_covid$`^OMXT_real`, order = c(0, 0, 1))
 post_aggression_ma <-
-  arima(post_aggression$`^WIG_real`, order = c(0, 0, 1))
+  arima(post_aggression$`^OMXT_real`, order = c(0, 0, 1))
 
 # wizualne porownanie modeli
-plot(df_ts$`^WIG_real`)
+plot(df_ts$`^OMXT_real`)
 lines(fitted(pre_covid_ma), col = 'green')
 lines(fitted(post_covid_ma), col = 'blue')
 lines(fitted(post_aggression_ma), col = 'red')
 
 # porownanie srednich
 pre_covid_mean <- fitted(pre_covid_ma) %>% mean()
+pre_covid_mean
 post_covid_mean <- fitted(post_covid_ma) %>% mean()
+post_covid_mean
 post_aggression_mean <- fitted(post_aggression_ma) %>% mean()
+post_aggression_mean
 
 # wizualne porownanie srednich z modeli (chatGPT)
 pre_covid_mean_ts <- zoo(pre_covid_mean, index(pre_covid))
@@ -118,51 +122,11 @@ post_covid_mean_ts <- zoo(post_covid_mean, index(post_covid))
 post_aggression_mean_ts <-
   zoo(post_aggression_mean, index(post_aggression))
 
-plot(df_ts$`^WIG_real`)
+plot(df_ts$`^OMXT_real`)
 lines(pre_covid_mean_ts, col = 'green')
 lines(post_covid_mean_ts, col = 'blue')
 lines(post_aggression_mean_ts, col = 'red')
 
-# test srednich (dla modeli) poprzez test srednich, gdzie hipoteza zerowa = srednie sa takie same
-t.test(fitted(pre_covid_ma),
-       fitted(post_covid_ma),
-       alternative = c("two.sided"))
-# data:  fitted(pre_covid_ma) and fitted(post_covid_ma)
-# t = 37.006, df = 959.05, p-value < 2.2e-16
-# alternative hypothesis: true difference in means is not equal to 0
-# 95 percent confidence interval:
-#   4755.563 5288.184
-# sample estimates:
-#   mean of x mean of y
-# 57804.85  52782.97
-# p-value < 0.05, zatem odrzucamy hipoteze o rownosci srednich na korzysc hipotezy alternatywnej
-
-t.test(fitted(post_covid_ma),
-       fitted(post_aggression_ma),
-       alternative = c("two.sided"))
-# data:  fitted(post_covid_ma) and fitted(post_aggression_ma)
-# t = 75.163, df = 1186.2, p-value < 2.2e-16
-# alternative hypothesis: true difference in means is not equal to 0
-# 95 percent confidence interval:
-#   12026.83 12671.52
-# sample estimates:
-#   mean of x mean of y
-# 52782.97  40433.80
-# p-value < 0.05, zatem odrzucamy hipoteze o rownosci srednich na korzysc hipotezy alternatywnej
-
-t.test(fitted(pre_covid_ma),
-       fitted(post_aggression_ma),
-       alternative = c("two.sided"))
-# data:  fitted(pre_covid_ma) and fitted(post_aggression_ma)
-# t = 149.5, df = 659.9, p-value < 2.2e-16
-# alternative hypothesis: true difference in means is not equal to 0
-# 95 percent confidence interval:
-#   17142.89 17599.20
-# sample estimates:
-#   mean of x mean of y
-# 57804.85  40433.80
-# p-value < 0.05, zatem odrzucamy hipoteze o rownosci srednich na korzysc hipotezy alternatywnej
-
 # predykcja z autodopasowania
-fit <- df_ts$`^WIG_real` %>% forecast::auto.arima()
+fit <- df_ts$`^OMXT_real` %>% forecast::auto.arima()
 plot(forecast::forecast(fit, h = 21))
