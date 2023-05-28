@@ -144,10 +144,13 @@ fit <-
   auto.arima(df_ts$`^OMXT_real`, xreg = as.matrix(df_all_slim_real[, 17:18]))
 checkresiduals(fit)
 periods = 21
-plot(forecast(fit, h = periods, xreg = as.matrix(
-  # chatGPT
-  data.frame(
-    "pandemic" = rep(0, length.out = periods),
-    "rus_aggresion" = rep(1, length.out = periods)
-  )
-)))
+plot(forecast(fit,
+              h = periods,
+              xreg = as.matrix(
+                # chatGPT
+                data.frame(
+                  "pandemic" = rep(0, length.out = periods),
+                  "rus_aggresion" = rep(1, length.out = periods)
+                )
+              )),
+     xlim = c(end(df_ts) - 25 * periods, end(df_ts) + periods))
