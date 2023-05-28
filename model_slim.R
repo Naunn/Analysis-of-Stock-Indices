@@ -4,11 +4,22 @@ library(readxl)
 library(forecast)
 library(Quandl) # https://financetrain.com/financial-time-series-data
 
+covid <-
+  as.Date("2020-02-19") # pomiedzy "2020-01-30" (wyciek wirusa poza Chiny), a "2020-03-11" (ogloszenie pandemii)
+rus_aggression <- as.Date("2022-02-24")
+
 df_all_slim_real <-
   read_excel("data/prepared/df_all_slim_real.xlsx") %>%
   mutate(DATE = as.Date(DATE)) %>%
   # uzupelnienie brakow "w gore"
-  fill(everything(), .direction = c("up"))
+  fill(everything(), .direction = c("up")) %>%
+  # dodanie zewnetrznych regresorow
+  mutate(
+    pandemic = ifelse(DATE > covid &
+                        DATE < rus_aggression, 1, 0),
+    # od czasu wybuchu wojny, pandemiczne regulacje "wyparowaly"
+    rus_aggresion = ifelse(DATE >= rus_aggression, 1, 0)
+  )
 
 df_all_slim_norm <-
   read_excel("data/prepared/df_all_slim_norm.xlsx") %>%
@@ -61,11 +72,11 @@ legend(
 )
 
 # rynki
-df_ts[, 3:13] %>% ts.plot(col = 3:13)
+df_ts[, 3:15] %>% ts.plot(col = 3:15)
 legend(
   "top",
-  colnames(df_ts[, 3:13]),
-  col = 3:13,
+  colnames(df_ts[, 3:15]),
+  col = 3:15,
   bty = "n",
   horiz = TRUE,
   lty = 1,
@@ -73,11 +84,11 @@ legend(
   text.width = 0.7
 )
 
-df_ts_norm[, 3:13] %>% ts.plot(col = 3:13)
+df_ts_norm[, 3:15] %>% ts.plot(col = 3:15)
 legend(
   "top",
-  colnames(df_ts[, 3:13]),
-  col = 3:13,
+  colnames(df_ts[, 3:15]),
+  col = 3:15,
   bty = "n",
   horiz = TRUE,
   lty = 1,
@@ -86,12 +97,10 @@ legend(
 )
 
 # porownanie srednich wykorzystujac model arima (automat)
+# nie potrzeba zewnetrzengo regresora z uwagi na podzial sygnalow na zdarzenia
 # (powinno to zniwelowac efekt szumu, w porownaniu do mierzenia zwyklych srednich z wartosci)
 
 # podzielimy na 3 okresy: przed pandemia; po panedmii, a przed agresja rosji; po agresji rosji
-covid <-
-  as.Date("2020-02-19") # pomiedzy "2020-01-30" (wyciek wirusa poza Chiny), a "2020-03-11" (ogloszenie pandemii)
-rus_aggression <- as.Date("2022-02-24")
 pre_covid <- window(df_ts, start = start(df_ts), end = covid)
 post_covid <- window(df_ts, start = covid, end = rus_aggression)
 post_aggression <-
@@ -131,6 +140,13 @@ lines(post_covid_mean_ts, col = 'blue')
 lines(post_aggression_mean_ts, col = 'red')
 
 # predykcja calosci
-fit <- auto.arima(df_ts$`^OMXT_real`)
+fit <-
+  auto.arima(df_ts$`^OMXT_real`, xreg = as.matrix(df_all_slim_real[, 17:18]))
 checkresiduals(fit)
-plot(forecast(fit, h = 21))
+periods = 21
+plot(forecast(fit, h = periods, xreg = as.matrix( # chatGPT
+  data.frame(
+    "pandemic" = rep(0, length.out = periods),
+    "rus_aggresion" = rep(1, length.out = periods)
+  )
+)))
