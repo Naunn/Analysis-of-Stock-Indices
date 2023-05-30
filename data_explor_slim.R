@@ -70,6 +70,7 @@ df_all_slim_real <-
     `^SHC_real` = `^SHC` * (1 - `inflation_acc_China (People's Republic of)`)
   )
 
+# https://rstudio-pubs-static.s3.amazonaws.com/419265_91c5fb9acf1742f88369c161ca59b6ef.html
 ggplot(df_all_slim_real, aes(x = DATE)) +
   # The World Health Organization declared the COVID-19 outbreak
   geom_vline(
