@@ -230,11 +230,9 @@ df_all <-
   left_join(wlk_bryt, by = "DATE") %>%
   left_join(usa, by = "DATE") %>%
   left_join(finlandia, by = "DATE") %>%
-  left_join(ukraina, by = "DATE") %>%
   left_join(rosja, by = "DATE") %>%
   left_join(turcja, by = "DATE") %>%
   left_join(chiny, by = "DATE") %>%
-  left_join(inflacja_rr, by = "DATE") %>%
   left_join(inflacja_skum, by = "DATE") %>%
   # poniewaz inflacja jest miesiac po miesiacu, wiec uzupelniamy cale miesiace "w dol"
   fill(everything(), .direction = c("down"))
@@ -505,7 +503,7 @@ df_ts <-
   # wybranie tylko kolumn z realnymi wartosciami
   select(c(DATE, ends_with("_real"), `^BTC`, `^ETH`)) %>%
   # uzupelnienie brakow "w gore"
-  fill(everything(), .direction = c("up")) %>% 
+  fill(everything(), .direction = c("up")) %>%
   read.zoo()
 
 # podzielimy na 3 okresy: przed pandemia; po panedmii, a przed agresja rosji; po agresji rosji
@@ -516,23 +514,23 @@ post_aggression <-
 
 # utworzenie modeli - należy wybrac wskaznik
 df_ts %>% colnames()
-# [1] "^WIG_real"   "^PX_real"    "^OMXT_real"  "^BUX_real"   "^DAX_real"   "^CAC_real"  
-# [7] "^UKX_real"   "^SPX_real"   "^HEX_real"   "^RTS_real"   "^XU100_real" "^SHC_real"  
-# [13] "^BTC"        "^ETH"   
+# [1] "^WIG_real"   "^PX_real"    "^OMXT_real"  "^BUX_real"   "^DAX_real"   "^CAC_real"
+# [7] "^UKX_real"   "^SPX_real"   "^HEX_real"   "^RTS_real"   "^XU100_real" "^SHC_real"
+# [13] "^BTC"        "^ETH"
 pre_covid_model <- auto.arima(pre_covid$`^WIG_real`)
-if (checkresiduals(pre_covid_model)$p.value > 0.05){
+if (checkresiduals(pre_covid_model)$p.value > 0.05) {
   print("Szereg jest stacjonarny")
 } else {
   print("Szereg NIE jest stacjonarny")
 }
 post_covid_model <- auto.arima(post_covid$`^WIG_real`)
-if (checkresiduals(post_covid_model)$p.value > 0.05){
+if (checkresiduals(post_covid_model)$p.value > 0.05) {
   print("Szereg jest stacjonarny")
 } else {
   print("Szereg NIE jest stacjonarny")
 }
 post_aggression_model <- auto.arima(post_aggression$`^WIG_real`)
-if (checkresiduals(post_aggression_model)$p.value > 0.05){
+if (checkresiduals(post_aggression_model)$p.value > 0.05) {
   print("Szereg jest stacjonarny")
 } else {
   print("Szereg NIE jest stacjonarny")
@@ -543,3 +541,14 @@ plot(df_ts$`^WIG_real`, main = "Polska (WIG)")
 lines(fitted(pre_covid_model), col = 'green')
 lines(fitted(post_covid_model), col = 'blue')
 lines(fitted(post_aggression_model), col = 'red')
+
+# test wartosci oczekiwanych z modeli
+t.test(pre_covid_model$fitted,
+       post_covid_model$fitted,
+       alternative = c("two.sided"))
+t.test(post_covid_model$fitted,
+       post_aggression_model$fitted,
+       alternative = c("two.sided"))
+t.test(pre_covid_model$fitted,
+       post_aggression_model$fitted,
+       alternative = c("two.sided"))
