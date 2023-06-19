@@ -518,18 +518,21 @@ df_ts %>% colnames()
 # [7] "^UKX_real"   "^SPX_real"   "^HEX_real"   "^RTS_real"   "^XU100_real" "^SHC_real"
 # [13] "^BTC"        "^ETH"
 pre_covid_model <- auto.arima(pre_covid$`^WIG_real`)
+summary(pre_covid_model)
 if (checkresiduals(pre_covid_model)$p.value > 0.05) {
   print("Szereg jest stacjonarny")
 } else {
   print("Szereg NIE jest stacjonarny")
 }
 post_covid_model <- auto.arima(post_covid$`^WIG_real`)
+summary(post_covid_model)
 if (checkresiduals(post_covid_model)$p.value > 0.05) {
   print("Szereg jest stacjonarny")
 } else {
   print("Szereg NIE jest stacjonarny")
 }
 post_aggression_model <- auto.arima(post_aggression$`^WIG_real`)
+summary(post_aggression_model)
 if (checkresiduals(post_aggression_model)$p.value > 0.05) {
   print("Szereg jest stacjonarny")
 } else {
